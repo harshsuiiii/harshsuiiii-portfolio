@@ -1,0 +1,62 @@
+<Section n="01" title="Overview">
+
+ReviveX is an autonomous payment-recovery agent built on Razorpay's APIs for recurring revenue. Instead of blindly retrying a failed payment, it looks at why the payment failed and runs a multi-attempt escalation strategy — governed by deterministic compliance rules and recorded in a full audit trail.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+Failed recurring payments are usually handled with a single retry script that knows nothing about the cause of the failure or the customer. Handing the problem to a language model fixes the first part and creates a new one: nobody wants a model deciding to message a customer at midnight, or for the fifth time.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+Split the decision in two. **What to say and how** is delegated to an LLM. **Whether contact is allowed at all** is enforced in plain TypeScript that the model cannot influence:
+
+- at most three attempts per case
+- no contact during quiet hours, 21:00–08:00 IST
+- at least 60 minutes between attempts
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+The escalation ladder has three rungs: a soft tone on the initial channel, a firm tone with the channel swapped between email and SMS, and a final notice before the case closes automatically. Gemini generates the customer copy and a plain-language explanation of its reasoning for each attempt; the call races a 5-second timeout and falls back to the rules engine if it loses.
+
+Payment links are created with the official Razorpay Node SDK in test mode, and incoming `payment.failed` webhooks are verified with HMAC SHA-256 signatures. A local checkout page lets a simulated payment be completed so the dashboard's recovery figures update. Cases are persisted in a file-backed JSON store, with a `/tmp` fallback on serverless hosting.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **Keeping compliance out of the prompt.** Rules that must always hold are code, not instructions.
+- **A model that may not answer.** The timeout race guarantees a decision even when the LLM is slow or unavailable.
+- **Explainability.** Every attempt records its timestamp, reasoning, channel, tone, action and outcome, so any case can be reconstructed afterwards.
+- **Persistence on serverless.** A file store does not survive across serverless instances; the project documents this and uses a temporary-directory fallback for the demo.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+The project runs in Razorpay test mode with simulated failures; no real payments are processed. The repository publishes no recovery-rate measurements, so none are claimed here.
+
+</Section>

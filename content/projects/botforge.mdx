@@ -1,0 +1,63 @@
+<Section n="01" title="Overview">
+
+BotForge is a multi-tenant SaaS platform for creating, embedding and monitoring AI chatbots. It combines a React dashboard, an Express API, PostgreSQL persistence, Google sign-in, OpenAI account connection, and an embeddable chat widget that streams its replies.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+Putting a chatbot on a website involves more than calling a model: someone has to configure what the bot may talk about, keep each customer's data and credentials separate, deliver the bot to a third-party page, and see afterwards what conversations actually happened.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+Two audiences, two paths into one API:
+
+- **Customers** use an authenticated dashboard to configure bots and read analytics.
+- **End users** talk to a public, embeddable widget identified by an embed key.
+
+Tenant data lives in PostgreSQL; provider credentials are encrypted before they are stored.
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+The backend is organised by responsibility: `auth/` for Google OAuth, OpenAI OAuth and JWT verification; `bots/` for chatbot CRUD and embed-key management; `chat/` for the public widget endpoint, topic checks, streaming and sessions; and `analytics/` for dashboard metrics and session logs. The widget is a standalone script served by the API and loaded by customer sites.
+
+Connected OpenAI access tokens are encrypted with AES-256-GCM using a key supplied through the environment. The schema is managed with a base SQL file and numbered migrations.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **A public endpoint next to private ones.** The chat endpoint must be reachable from any customer site while everything else requires a dashboard JWT.
+- **Streaming to a third-party page.** Replies are delivered over Server-Sent Events from a widget that runs inside someone else's site.
+- **Storing other people's credentials.** Tokens are encrypted at rest rather than stored in plain text.
+- **Knowing what is unfinished.** The README is explicit that this is an MVP foundation and lists what is still needed before public production traffic, starting with rate limiting, quotas and abuse controls.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+No benchmarks or usage figures are published in the repository, so none are claimed here. The project is best evaluated by running it locally against the documented setup.
+
+</Section>

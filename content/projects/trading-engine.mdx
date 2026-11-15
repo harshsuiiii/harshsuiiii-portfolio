@@ -1,0 +1,62 @@
+<Section n="01" title="Overview">
+
+A small matching engine and order book written in TypeScript on Express. It keeps bids and asks in memory for a single ticker, matches incoming orders against the opposite side, moves balances between the two users on every fill, and exposes depth and quote endpoints.
+
+It is a prototype for learning how an exchange's core loop works, not a production trading system.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+Every exchange has the same heart: an order book and the rules for matching against it. The mechanics — crossing prices, partial fills, resting orders, depth, mid price, VWAP — are easy to describe and worth implementing once to really understand.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+- Keep both books in memory as arrays sorted by price.
+- On each new order, try to fill it against the opposite book first.
+- Whatever is left over rests on the book.
+- Derive all market data — depth and quotes — from the two books on request.
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+`POST /order` takes a side, price, quantity and user. The matching function walks the opposite book from the best price and fills while the resting price crosses the incoming one, handling both full and partial fills. Each fill calls a balance function that moves the asset one way and USD the other. Any remaining quantity is pushed onto the book, which is then re-sorted.
+
+`GET /depth` aggregates resting quantity per price level. `GET /quote` returns best bid, best ask and mid price, and — when a number of levels is requested — a volume-weighted average price for each side over those levels. `GET /balance/:userId` returns a user's holdings.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **Partial fills.** An incoming order can consume several resting orders and still have quantity left; each case has to leave the book and both balances consistent.
+- **Deriving quotes.** Mid price has to handle a one-sided book, and VWAP has to weight by quantity across a chosen depth.
+- **What a real engine would change.** Re-sorting an array on every insert is fine at this size but is not how a low-latency engine is built — a production version would use price-level structures with FIFO queues, time priority within a level, multiple tickers and persistence. None of that is implemented here.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+The repository includes a Jest and Supertest spec for the API. It contains no latency or throughput benchmarks, so despite the repository's name no performance figures are claimed here.
+
+</Section>

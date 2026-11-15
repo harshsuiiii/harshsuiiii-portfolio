@@ -1,0 +1,61 @@
+<Section n="01" title="Overview">
+
+Shortly is a URL shortener with click analytics, written in Java 21 on Spring Boot with PostgreSQL and Redis. It is a small service deliberately built the way a production one would be, with each design decision written down and argued in the repository.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+A URL shortener looks trivial and hides several real problems: generating short codes that never collide, serving a read-heavy redirect path quickly, limiting abuse across multiple instances, and recording analytics without making every redirect slower.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+- **Counter plus Base62, not hashing.** IDs come from a Postgres sequence, so uniqueness is already solved; Base62 only renders the number. Seven characters give about 3.5 trillion codes.
+- **Scramble the counter.** A raw counter is sequential and enumerable, so the ID is first multiplied by a constant coprime to 62⁷, modulo 62⁷. That is a bijection — still zero collisions — but consecutive IDs land far apart. The README is explicit that this is obfuscation, not cryptography.
+- **Let the database arbitrate.** Custom aliases can collide with future generated codes, so the `code` column has a unique constraint and inserts use `ON CONFLICT DO NOTHING`.
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+The redirect is the hot path, so everything on it is either in Redis or deferred.
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+The cache is cache-aside with three protections: unknown and expired codes are cached as sentinels to stop cache penetration, TTLs carry ±10% jitter to avoid many keys expiring together, and the Redis TTL is capped at the link's remaining lifetime. Every cache call fails open with a 250 ms timeout; Postgres stays the source of truth.
+
+Clicks are offered to a bounded in-memory queue without blocking. A scheduled task drains it every two seconds and writes one batched insert plus one counter update per code in a single transaction. For privacy only the referrer host and a salted hash of the IP are stored.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **302, not 301.** A 301 is cached by browsers, so repeat visits would never reach the service and click counts and expiry would both break.
+- **Backpressure.** When the click queue is full, analytics are shed and counted in a metric — redirects are never the thing that slows down.
+- **Known limits, stated.** Events still in memory are lost on a hard kill, stats are eventually consistent, and there is no auth or ownership model. The README lists each of these and the scaling path beyond them.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+Integration tests run against real PostgreSQL and Redis through Testcontainers, including a test that a generated code skips over a colliding custom alias. The repository gives capacity estimates as reasoning, not measurements, so no performance numbers are quoted here.
+
+</Section>

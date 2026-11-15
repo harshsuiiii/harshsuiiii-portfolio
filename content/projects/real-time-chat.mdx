@@ -1,0 +1,59 @@
+<Section n="01" title="Overview">
+
+A full-stack real-time chat application on the MERN stack with Socket.IO. Users sign up, log in, see who is online and exchange text and image messages one to one, with messages delivered live to connected recipients.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+HTTP is request and response; chat is not. A message has to reach the other person without them asking for it, and both sides need to know who is currently connected. That means holding a persistent connection per user and keeping track of which connection belongs to whom.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+- **REST for state, sockets for push.** Messages are created through a normal authenticated API call and stored in MongoDB; Socket.IO is used only to push the new message and presence changes.
+- **A presence map on the server.** Each socket connects with its user ID, and the server keeps a map from user ID to socket ID.
+- **Small client stores.** Zustand stores hold auth, chat and theme state.
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+The backend is Express with controllers for auth and messages, Mongoose models for users and messages, and JWT middleware protecting routes. When a message is saved, the controller looks up the receiver's socket ID and, if they are connected, emits a `newMessage` event to that socket. On every connect and disconnect the server broadcasts `getOnlineUsers` with the current list of user IDs.
+
+Image messages are uploaded to Cloudinary and stored by URL. The frontend is React on Vite with Tailwind CSS and DaisyUI, and includes login, sign-up, profile and settings pages with loading skeletons.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **Mapping users to connections.** Presence is only as correct as the user-to-socket map, which has to be updated on every connect and disconnect.
+- **Two channels, one source of truth.** Because messages are persisted through REST first, a recipient who is offline still finds them when they next load the conversation.
+- **Current limits.** The presence map is in process memory, so this design runs on a single server instance; scaling out would need a shared adapter.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+No tests or benchmarks are published in the repository, so no results are claimed here.
+
+</Section>

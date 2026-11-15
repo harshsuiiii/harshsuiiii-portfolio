@@ -1,0 +1,66 @@
+<Section n="01" title="Overview">
+
+This project explores diffusion-based generative modelling for simulating low-level CMS detector data. It was built as an ML4SCI evaluation task for Google Summer of Code. A denoising diffusion model (DDPM) is trained on unlabelled CMS jet images and compared against two baselines — a GAN and a VAE — using statistical tests.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+High-energy physics experiments depend on detector simulations that are computationally expensive. A generative model that can produce realistic detector responses is a cheaper alternative — if it gets the distribution right.
+
+The data makes that hard. It is extremely sparse (most pixels are near zero), energy is concentrated in localised clusters, and the distribution is heavy-tailed, with rare high-energy events that matter physically.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+Train three model families on the same subset and judge them on the same measures:
+
+- **Diffusion** — learns to reconstruct data from noise through iterative denoising, trained with an MSE loss on the predicted noise.
+- **GAN** — generator against discriminator.
+- **VAE** — a latent-variable model with KL regularisation.
+
+Then compare generated and real samples with Wasserstein distance, a Kolmogorov–Smirnov test, MMD, and a diversity measure across samples.
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+The source images are 125 × 125 with 8 detector channels. For training they are downscaled to 32 × 32 × 8 and normalised to the range -1 to 1, using a 20,000-sample subset. The diffusion model uses 50 timesteps with a noise schedule running from 0.0001 to 0.02. Experiments are driven by one YAML configuration, and metrics, tables, plots and samples are written to a `results/` directory. The full dataset is about 38 GB and is not included in the repository.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **Metrics that lie.** On sparse data, the collapsed GAN scores the *lowest* Wasserstein distance, because near-constant, mostly empty images sit close to the mostly empty real ones. A diversity measure was needed to expose the collapse.
+- **Mode collapse.** The GAN's outputs became near-constant.
+- **Posterior collapse.** The VAE's KL term went to zero and its samples were over-smoothed.
+- **Compute.** The configuration trains on CPU with small batches, which constrained resolution and schedule length.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+The diffusion model gives the closest match to the real distribution and keeps sample diversity; both baselines collapse. The plots below are the actual outputs committed to the repository.
+
+<Results />
+
+</Section>

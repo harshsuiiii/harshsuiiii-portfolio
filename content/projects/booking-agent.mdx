@@ -1,0 +1,72 @@
+<Section n="01" title="Overview">
+
+Booking Agent is a flight search and booking platform for travel agents. An agent describes a trip in plain language or fills in a search form; the platform asks several suppliers at once, turns every answer into one offer format, prices it in INR with the agency's markup, and shows the best options side by side.
+
+It runs on demo data only: three simulated suppliers and the Duffel sandbox. No real money moves and no tickets are issued, and the interface labels simulated results as such.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+Fares for the same trip come from many suppliers, each with its own API, format, currency and failure behaviour. An agent comparing them by hand is slow, and a single slow supplier can stall the whole search.
+
+Adding an AI assistant raises a second problem: a language model that invents a price, or books something on its own, is worse than no assistant at all.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+The system is split so that each risk has one owner:
+
+- **Connectors** hide supplier differences behind a single `Offer` model.
+- **An orchestrator** owns parallelism, timeouts and partial failure.
+- **A rules engine** owns pricing, in code.
+- **The assistant** gets read-only tools and nothing else.
+- **Booking** is a separate, human-confirmed step that always re-prices live.
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+A search travels from the Next.js client through FastAPI to the orchestrator, which fans out to every enabled supplier and streams results back as each one finishes.
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+Results stream to the browser over Server-Sent Events, with a status strip showing which suppliers answered, failed or timed out — partial failure is shown, never hidden. Non-INR prices are converted with ECB rates, and the original currency, rate and timestamp are kept for audit. Money is always a `Decimal` with a currency code, never a float.
+
+The assistant exposes four read-only tools: `search_flights`, `get_offer_details`, `compare_offers` and `explain_ranking`. Offer cards are priced by the backend, and the model's reply is checked against tool results so invented prices are rejected. Passenger details are entered only in the booking form and never reach the model.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **Partial failure.** Each supplier has a 7-second timeout, a circuit breaker and a concurrency limit, so one bad supplier degrades the result set instead of blocking it.
+- **Keeping the model honest.** Each model call is capped at 20 seconds with one retry, each turn at 45 seconds and three tool rounds, and only the top five offers are sent to the model.
+- **Stale prices.** Cached prices are treated as a display hint. Booking re-prices live and needs a confirmation tied to that exact price and passenger list.
+- **Duplicates.** The same fare arriving from two suppliers is merged into one card rather than shown twice.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+The repository documents its test coverage rather than performance figures. A load test script (100 concurrent searches) is included, but no measured numbers are published, so none are quoted here.
+
+<Results />
+
+</Section>

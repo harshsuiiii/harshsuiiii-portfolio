@@ -1,0 +1,65 @@
+<Section n="01" title="Overview">
+
+A retrieval-augmented generation system that does more than retrieve documents and generate an answer. Every answer is audited by a critic for grounding in the retrieved chunks. Rejected answers trigger a bounded query-reformulation loop, and when the retry limit is reached the graph returns an evidence-limited fallback instead of inventing facts.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+A plain RAG pipeline is a straight line: retrieve, generate, return. If retrieval misses, the model often fills the gap with something plausible. Nothing in the pipeline notices, and the user cannot tell a grounded answer from an invented one.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+Turn the line into a cycle with a judge in it. After generation, a critic checks each claim against the retrieved evidence and routes the run one of three ways:
+
+- all claims grounded → **accept**
+- a claim unsupported and retries remain → **reformulate** and retrieve again
+- a claim unsupported and retries exhausted → **fallback**
+
+The retry cap makes the loop bounded, so the system always terminates.
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+The workflow is a LangGraph state graph over a single `RAGState` object.
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+Documents are ingested into a local, persisted Chroma vector store. Generation uses `llama-3.1-8b-instant` through Groq's OpenAI-compatible API. The state carries the original question, the current query, retrieved chunks, the generated answer, the critic's verdict and reasoning, the list of unsupported claims, retry controls, the final answer and a trace of every node visited.
+
+Runs can be streamed as a colour-coded, node-by-node trace. For a question the corpus covers, the path is retrieve → generate → critic → accept with zero retries. For one it does not cover, the critic forces a reformulation before the graph accepts an answer that says the context does not contain the information.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **Writing a critic that is strict but fair.** The critic experiments (`04_critic.py`) are among the largest files in the project; a critic that rejects everything is as useless as one that accepts everything.
+- **Knowing when to stop.** Evaluation scripts compare retry caps and reformulation strategies rather than assuming more retries are better.
+- **An honest failure mode.** The fallback states what the evidence does not cover instead of producing a best guess.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+The repository includes scripts that compare plain RAG with the self-healing graph and report retry, fallback and answer-change metrics. Their output files are generated locally and are not committed, so no figures are quoted here.
+
+</Section>

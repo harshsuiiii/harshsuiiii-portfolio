@@ -1,0 +1,61 @@
+<Section n="01" title="Overview">
+
+AuroraDNS is a lightweight DNS forwarding server built from scratch in TypeScript. Unlike most Node.js DNS servers, it does not rely on a parsing package: it reads and writes binary DNS packets (RFC 1035) directly with raw Buffers and bitwise operations.
+
+On top of the protocol layer it adds a TTL-aware cache, failover across upstream resolvers and a small ad-blocking blocklist.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+DNS is one of those protocols most engineers use every second and never look at. The aim was to understand it at the byte level — headers, flags, questions, answers and name compression — by implementing a server that real tools like `nslookup` and `dig` can talk to.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+- **Parse by hand.** Separate encoders and decoders for the 12-byte header, the question section and answer records.
+- **Forward, don't recurse.** Cache misses go to a configurable list of upstream resolvers.
+- **Keep it small.** No runtime parsing dependencies; configuration through a `.env` file and a plain-text blocklist.
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+The header parser unpacks the flag bits — query/response, opcode, recursion flags and response code — with shifts and masks. The question parser handles domain-name decompression: when the top two bits of a length byte are set (`0xC0`), the remaining bits are a pointer to an earlier offset in the packet, and the name continues from there.
+
+Upstream responses are stored in memory by their TTL and repeat queries are answered without a round trip. A periodic sweep removes expired entries. Blocking a domain in `blocklist.txt` also blocks its subdomains; matches are answered with `0.0.0.0`.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **Compression pointers.** Names can jump backwards through the packet, so the parser has to follow pointers without losing track of where the current record ends.
+- **Bit-level correctness.** One wrong shift in the header yields a packet that clients silently discard, which is why the binary parsing is the part covered by unit tests.
+- **Unreliable upstreams.** UDP gives no delivery guarantee; each upstream query has a timeout before the next resolver is tried.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+The parsing logic for headers, questions and answers is covered by Vitest unit tests, and the server can be exercised manually with `nslookup` or `dig` against its local port. The repository publishes no latency or throughput measurements, so none are claimed here.
+
+</Section>

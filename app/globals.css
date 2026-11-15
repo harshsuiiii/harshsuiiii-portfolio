@@ -1,0 +1,317 @@
+@import "tailwindcss";
+@import "lenis/dist/lenis.css";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ---------- Design tokens ---------- */
+:root {
+  /* light theme */
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --elevated: #edf0f5;
+  --border: #e2e6ed;
+  --text: #151a23;
+  --text-2: #667085;
+  --text-3: #6b7585; /* muted, darkened from #8993A2 to pass AA on --bg */
+  --lime: #a3e635;
+  --blue: #60a5fa;
+  --ink: #0b0f14; /* text placed on lime / blue fills */
+  --accent-text: #3f6212; /* lime used as text */
+  --accent-2-text: #1d4ed8; /* blue used as text */
+  --shadow: 0 1px 2px rgb(21 26 35 / 0.04), 0 12px 32px -12px rgb(21 26 35 / 0.12);
+
+  --gutter: 20px;
+  --section: 72px;
+  --radius-sm: 12px;
+  --radius: 16px;
+  --radius-lg: 20px;
+  --nav-h: 68px;
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 200ms;
+  --dur: 500ms;
+  --dur-slow: 900ms;
+
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  --bg: #090b10;
+  --surface: #111722;
+  --elevated: #151d29;
+  --border: #1d2838;
+  --text: #e9eef5;
+  --text-2: #9aa7b8;
+  --text-3: #748094;
+  --accent-text: #a3e635;
+  --accent-2-text: #60a5fa;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4), 0 16px 40px -16px rgb(0 0 0 / 0.6);
+  color-scheme: dark;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --gutter: 5vw;
+    --section: 112px;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --gutter: 6vw;
+    --section: 144px;
+    --nav-h: 76px;
+  }
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-elevated: var(--elevated);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-3: var(--text-3);
+  --color-lime: var(--lime);
+  --color-blue: var(--blue);
+  --color-ink: var(--ink);
+  --color-accent: var(--accent-text);
+  --color-accent-2: var(--accent-2-text);
+
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --text-hero: clamp(2.6rem, 7.6vw, 7rem);
+  --text-section: clamp(2.25rem, 4.6vw, 4rem);
+  --text-project: clamp(1.75rem, 2.6vw, 2.5rem);
+  --text-lead: clamp(1.25rem, 2.1vw, 2rem);
+  --text-label: 0.75rem;
+
+  --radius-card: var(--radius);
+  --ease-out-expo: var(--ease-out);
+}
+
+/* ---------- Base ---------- */
+html {
+  scroll-padding-top: var(--nav-h);
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+}
+::selection {
+  background: var(--lime);
+  color: var(--ink);
+}
+:focus-visible {
+  outline: 2px solid var(--accent-2-text);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ---------- Layout primitives ---------- */
+@utility container-x {
+  width: 100%;
+  max-width: 1440px;
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+@utility section-y {
+  padding-block: var(--section);
+}
+@utility grid-12 {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 16px;
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 24px;
+  }
+  @media (min-width: 1024px) {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    column-gap: 32px;
+  }
+}
+@utility label {
+  font-family: var(--font-mono);
+  font-size: var(--text-label);
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+}
+@utility mark-lime {
+  background: var(--lime);
+  color: var(--ink);
+  padding-inline: 0.12em;
+  border-radius: 0.08em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+@utility link-underline {
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size var(--dur) var(--ease-out);
+  &:hover,
+  &:focus-visible {
+    background-size: 100% 1px;
+  }
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  height: 48px;
+  padding-inline: 1.35rem;
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transition:
+    background-color var(--dur-fast) ease,
+    color var(--dur-fast) ease,
+    border-color var(--dur-fast) ease,
+    transform var(--dur) var(--ease-out);
+}
+.btn:active {
+  transform: scale(0.98);
+}
+.btn-primary {
+  background: var(--text);
+  color: var(--bg);
+}
+.btn-primary:hover {
+  background: var(--lime);
+  color: var(--ink);
+}
+.btn-ghost {
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.btn-ghost:hover {
+  border-color: var(--text);
+}
+
+/* ---------- Hero line reveal (CSS only, so text paints without JS) ---------- */
+.line-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.06em;
+}
+.line-mask > span {
+  display: block;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .line-mask > span {
+    animation: line-up var(--dur-slow) var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 90ms + 80ms);
+  }
+  .fade-up {
+    animation: fade-up var(--dur-slow) var(--ease-out) both;
+    animation-delay: calc(var(--i, 0) * 90ms + 80ms);
+  }
+  .page-enter {
+    animation: page-in 600ms var(--ease-out) both;
+  }
+}
+@keyframes line-up {
+  from {
+    transform: translateY(108%);
+  }
+}
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+}
+/* Opacity only: a transform here would become the containing block for
+   position: fixed descendants and break the pinned showreel. */
+@keyframes page-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ---------- Case-study prose ---------- */
+.prose-case p {
+  color: var(--text-2);
+  max-width: 68ch;
+}
+.prose-case p + p {
+  margin-top: 1.1em;
+}
+.prose-case strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.prose-case code {
+  font-family: var(--font-mono);
+  font-size: 0.86em;
+  background: var(--elevated);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.1em 0.38em;
+  color: var(--text);
+}
+.prose-case ul {
+  margin-top: 1em;
+  display: grid;
+  gap: 0.6em;
+  color: var(--text-2);
+  max-width: 68ch;
+}
+.prose-case ul > li {
+  position: relative;
+  padding-left: 1.4em;
+}
+.prose-case ul > li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.72em;
+  width: 0.7em;
+  height: 1px;
+  background: var(--text-3);
+}
+.prose-case a {
+  color: var(--text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,69 @@
+<Section n="01" title="Overview">
+
+A distributed rate limiter for Node.js, backed by Redis. It enforces one shared limit across any number of servers, and it can be used two ways: as a stateless HTTP decision service called from any language, or as a library with Express/Connect middleware embedded in a Node service.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+A limiter that lives in one process stops being correct the moment there are two processes. Moving the counter into Redis fixes that, but creates new problems: two replicas racing for the last slot, clocks that disagree between servers, and a hard dependency on Redis being healthy.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+- **Atomicity.** Read, decide and write happen inside one Lua script, which Redis executes atomically.
+- **One clock.** Scripts read the time from Redis, so drift between app servers cannot change a limit.
+- **Integer arithmetic.** Avoids floating-point drift in token counts.
+- **Degrade, don't fail.** Deadlines, a circuit breaker, a per-node fallback store and a local denial cache keep the limiter answering when Redis is slow or down.
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+Replicas are stateless; Redis is the single source of truth. Each replica holds only a short-lived denial cache and a fallback store used during outages.
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+Four algorithms are implemented, each as a Lua script with a line-for-line TypeScript twin used by the in-memory store:
+
+- **Token bucket** — smooth refill with bursts; constant memory per key.
+- **Sliding window** — a weighted estimate across two windows; constant memory.
+- **Sliding log** — exact, with memory proportional to the limit; suited to small strict limits.
+- **Fixed window** — the cheapest, with the known edge case at window boundaries.
+
+Scripts are registered through ioredis, which uses `EVALSHA` and falls back to `EVAL` after a failover or script flush. Keys for one rule and key share a hash tag so multi-key scripts stay on one Redis Cluster slot. Configuration is a YAML file plus environment overrides, validated with zod.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **Proving two implementations agree.** A shared contract suite runs against both the memory store and live Redis, so the Lua and TypeScript versions cannot drift apart silently.
+- **Exact retry times.** `retryAfterMs` is tested to the millisecond: a request is denied one millisecond before it and admitted at it.
+- **Failure modes as a choice.** When Redis is unavailable the limiter can fail open, fail closed, or fall back to the local store; the decision records which path answered.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+The repository states correctness properties verified by tests. It does not publish throughput or latency benchmarks, so none are claimed here.
+
+<Results />
+
+</Section>

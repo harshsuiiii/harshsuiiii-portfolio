@@ -1,0 +1,70 @@
+<Section n="01" title="Overview">
+
+AutoRedTeam is an autonomous multi-agent system that finds, exploits and proves web-application vulnerabilities against a sandboxed target. It pairs an LLM-driven attacker with a deterministic verification engine: the model proposes attacks, and the engine executes them and confirms the outcome mechanically.
+
+A finding exists only if it was reproduced. Every result ships with the exact request that was sent and the evidence that came back.
+
+</Section>
+
+<Section n="02" title="Problem statement">
+
+Dynamic application security scanners are noisy. They flag large numbers of possible issues, most of which a human then has to triage. An LLM pointed at the same problem tends to add confident guesses to that pile.
+
+The goal here was the opposite trade-off: prove a smaller set of vulnerabilities by actually exploiting them, so there is nothing left to triage.
+
+</Section>
+
+<Section n="03" title="Technical approach">
+
+The pipeline is a state machine of specialised agents built on LangGraph. Three rules shape it:
+
+- **Schemas are the single source of truth.** Every message between agents is a Pydantic model defined in one place.
+- **The verifier uses no LLM.** The model proposes; it never judges success.
+- **Network access is budgeted and scoped.** All target traffic passes through one HTTP client with a request budget and a host allowlist.
+
+</Section>
+
+<Section n="04" title="System architecture">
+
+Every LLM and HTTP boundary is dependency-injected, so each node can be unit-tested with fakes — no live model or network needed.
+
+<Architecture />
+
+</Section>
+
+<Section n="05" title="Implementation details">
+
+Each vulnerability class has its own oracle. IDOR is confirmed when the response for another user's object has the same JSON structure as the baseline but different data. Error-based SQL injection needs a database error signature that is absent from a benign baseline. Blind SQL injection uses statistical timing across repeated requests. Reflected XSS must actually execute in a real Chromium instance. Broken authentication is confirmed when a forged, unsigned `alg:none` admin token turns a 401 into a 200.
+
+An ambiguous result is never treated as proof; it is returned as not exploited. CVSS scores come from the `cvss` library, not from the model.
+
+</Section>
+
+<Section n="06" title="Main features">
+
+<Features />
+
+</Section>
+
+<Section n="07" title="Technology stack">
+
+<Stack />
+
+</Section>
+
+<Section n="08" title="Engineering challenges">
+
+- **Defining proof.** Each class needed a check that cannot be satisfied by an application that simply always errors, always reflects, or is always slow.
+- **Timing noise.** Blind injection is only flagged when the mean delay matches the injected sleep beyond the measured noise.
+- **Portability across model providers.** The attacker uses required tool-calling so the same graph runs on any OpenAI-compatible endpoint.
+- **Safety.** The target is OWASP Juice Shop on an isolated Docker network; the project is for authorised testing of intentionally vulnerable targets only.
+
+</Section>
+
+<Section n="09" title="Evaluation and results">
+
+Results are scored against a labelled ground truth of the target's documented vulnerabilities. The repository reports recall against **all** documented vulnerabilities too — including classes the system is deliberately not designed to verify — rather than only against the favourable denominator.
+
+<Results />
+
+</Section>
