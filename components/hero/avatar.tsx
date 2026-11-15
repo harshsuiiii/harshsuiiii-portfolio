@@ -17,7 +17,7 @@ const TOUCH_RECENTER_MS = 2200;
  * sprites clipped to each eye opening, and follow the pointer (mouse, pen or
  * touch). The head leans a few degrees the same way.
  */
-export function Avatar({ className = "" }: { className?: string }) {
+export function Avatar({ className = "", style }: { className?: string; style?: React.CSSProperties }) {
   const id = useId();
   const root = useRef<HTMLDivElement>(null);
   const head = useRef<HTMLDivElement>(null);
@@ -98,14 +98,14 @@ export function Avatar({ className = "" }: { className?: string }) {
   }, []);
 
   return (
-    <div ref={root} role="img" aria-label={`Illustrated avatar of ${siteConfig.name}; its eyes follow your pointer`} className={className}>
+    <div ref={root} role="img" aria-label={`Illustrated avatar of ${siteConfig.name}; its eyes follow your pointer`} className={className} style={style}>
       <div ref={head} className="relative will-change-transform" style={{ aspectRatio: `${avatar.width} / ${avatar.height}` }}>
         <Image
           src={avatar.src}
           alt=""
           fill
           priority
-          sizes="(min-width: 1024px) 24vw, 160px"
+          sizes="(min-width: 1024px) 24vw, 68vw"
           draggable={false}
           className="select-none object-contain drop-shadow-[0_18px_28px_rgb(0_0_0/0.22)]"
         />

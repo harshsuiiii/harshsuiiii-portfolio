@@ -26,8 +26,6 @@ export function HeroSection() {
       </div>
 
       <div className="container-x relative flex flex-1 flex-col justify-end pb-6 md:pb-8">
-        {/* phones and tablets: avatar sits above the headline, on the right */}
-        <Avatar className="fade-up mb-4 w-28 self-end sm:w-36 md:w-44 lg:hidden" />
         <div className="fade-up mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 md:mb-8" style={{ "--i": 0 } as React.CSSProperties}>
           <span className="label inline-flex items-center gap-2 text-text-2">
             <span className="relative flex size-2">
@@ -38,6 +36,10 @@ export function HeroSection() {
           </span>
           <span className="label text-text-3">Full-Stack Engineer / AI·ML / {siteConfig.location}</span>
         </div>
+
+        {/* phones and tablets only: large avatar between the name line and the headline.
+            Width is capped by both screen width and height, so it never touches the edges. */}
+        <Avatar className="fade-up mx-auto mb-6 w-[min(68vw,34svh)] lg:hidden" style={{ "--i": 1 } as React.CSSProperties} />
 
         <div className="grid-12 items-end gap-y-8">
           <h1 id="hero-title" className="display col-span-4 text-(length:--text-hero) md:col-span-6 lg:col-span-9">
