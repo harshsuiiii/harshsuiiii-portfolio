@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowDown, ArrowUpRight } from "lucide-react";
 import { siteConfig, socialLinks } from "@/data/site-config";
+import { Avatar } from "./avatar";
 import { HeroVisual } from "./hero-visual";
 
 const lines: React.ReactNode[] = [
@@ -25,6 +26,8 @@ export function HeroSection() {
       </div>
 
       <div className="container-x relative flex flex-1 flex-col justify-end pb-6 md:pb-8">
+        {/* phones and tablets: avatar sits above the headline, on the right */}
+        <Avatar className="fade-up mb-4 w-28 self-end sm:w-36 md:w-44 lg:hidden" />
         <div className="fade-up mb-6 flex flex-wrap items-center gap-x-5 gap-y-2 md:mb-8" style={{ "--i": 0 } as React.CSSProperties}>
           <span className="label inline-flex items-center gap-2 text-text-2">
             <span className="relative flex size-2">
@@ -45,7 +48,10 @@ export function HeroSection() {
             ))}
           </h1>
 
-          <div className="fade-up col-span-4 md:col-span-4 lg:col-span-3 lg:pb-3" style={{ "--i": 5 } as React.CSSProperties}>
+          <div className="col-span-4 md:col-span-4 lg:col-span-3 lg:pb-3">
+            {/* desktop: avatar on the right, above the introduction */}
+            <Avatar className="fade-up mb-6 hidden lg:block lg:w-[min(100%,27svh)]" />
+            <div className="fade-up" style={{ "--i": 5 } as React.CSSProperties}>
             <p className="text-pretty text-base text-text-2 md:text-[1.0625rem]">{siteConfig.description}</p>
             <div className="mt-6 flex flex-wrap gap-3">
               <Link href="/#work" className="btn btn-primary">
@@ -54,6 +60,7 @@ export function HeroSection() {
               <Link href={contactHref} className="btn btn-ghost">
                 Contact
               </Link>
+            </div>
             </div>
           </div>
         </div>

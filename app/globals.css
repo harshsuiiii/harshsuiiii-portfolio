@@ -258,6 +258,26 @@ body {
   }
 }
 
+/* ---------- Avatar blink ---------- */
+.avatar-lid {
+  transform: scaleY(0);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .avatar-lid {
+    animation: avatar-blink 5.6s 1.8s infinite;
+  }
+}
+@keyframes avatar-blink {
+  0%,
+  95.5%,
+  100% {
+    transform: scaleY(0);
+  }
+  97.6% {
+    transform: scaleY(1);
+  }
+}
+
 /* ---------- Case-study prose ---------- */
 .prose-case p {
   color: var(--text-2);
